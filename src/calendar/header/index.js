@@ -5,6 +5,7 @@ import XDate from 'xdate';
 import PropTypes from 'prop-types';
 import styleConstructor from './style';
 import { weekDayNames } from '../../dateutils';
+import Icon from 'react-native-vector-icons/FontAwesome'
 
 class CalendarHeader extends Component {
   static propTypes = {
@@ -85,6 +86,9 @@ class CalendarHeader extends Component {
     }
     return (
       <View>
+        <TouchableOpacity hitSlop={{top: 5, left: 5, bottom: 5, right: 5}} style={{alignSelf: 'flex-end', padding: 10}} onPress={ this.props.close }>
+          <Icon color={'red'} name='close' size={25} />
+        </TouchableOpacity>
         <View style={this.style.header}>
           {leftArrow}
           <View style={{ flexDirection: 'row' }}>
