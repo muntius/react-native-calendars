@@ -16,11 +16,16 @@ class CalendarHeader extends Component {
     firstDay: PropTypes.number,
     renderArrow: PropTypes.func,
     hideDayNames: PropTypes.bool,
-    weekNumbers: PropTypes.bool
+    weekNumbers: PropTypes.bool,
+    toggleShowYear: PropTypes.func,
+    renderArrow: PropTypes.func
   };
 
   constructor(props) {
     super(props);
+    this.state = {
+      showYear: this.props.showYear
+    };
     this.style = styleConstructor(props.theme);
     this.addMonth = this.addMonth.bind(this);
     this.substractMonth = this.substractMonth.bind(this);
@@ -34,20 +39,14 @@ class CalendarHeader extends Component {
     this.props.addMonth(-1);
   }
 
-  shouldComponentUpdate(nextProps) {
-    if (
-      nextProps.month.toString('yyyy MM') !==
-      this.props.month.toString('yyyy MM')
-    ) {
-      return true;
-    }
+  shouldComponentUpdate(nextProps, nextState) {
     if (nextProps.showIndicator !== this.props.showIndicator) {
-      return true;
+      return false;
     }
     if (nextProps.hideDayNames !== this.props.hideDayNames) {
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   render() {
@@ -83,14 +82,63 @@ class CalendarHeader extends Component {
     if (this.props.showIndicator) {
       indicator = <ActivityIndicator />;
     }
+
+    if (this.props.showYear) {
+      return (
+        <View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              paddingLeft: 10,
+              paddingRight: 10,
+              alignItems: "center"
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row"
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+                onPress={() => {
+                  this.props.toggleShowYear();
+                }}
+              >
+                <Text style={this.style.monthText}>
+                  {this.props.month.toString(
+                    this.props.monthFormat
+                      ? this.props.monthFormat
+                      : "MMMM yyyy"
+                  )}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
     return (
       <View>
         <View style={this.style.header}>
           {leftArrow}
-          <View style={{ flexDirection: 'row' }}>
-            <Text allowFontScaling={false} style={this.style.monthText}>
-              {this.props.month.toString(this.props.monthFormat ? this.props.monthFormat : 'MMMM yyyy')}
-            </Text>
+          <View style={{ flexDirection: "row" }}>
+            <TouchableOpacity
+              onPress={() => {
+                this.props.toggleShowYear();
+              }}
+            >
+              <Text style={this.style.monthText}>
+                {this.props.month.toString(
+                  this.props.monthFormat ? this.props.monthFormat : "MMMM yyyy"
+                )}
+              </Text>
+            </TouchableOpacity>
             {indicator}
           </View>
           {rightArrow}
@@ -99,9 +147,11 @@ class CalendarHeader extends Component {
           !this.props.hideDayNames &&
           <View style={this.style.week}>
             {this.props.weekNumbers && <Text allowFontScaling={false} style={this.style.dayHeader}></Text>}
-            {weekDaysNames.map((day, idx) => (
-              <Text allowFontScaling={false} key={idx} style={this.style.dayHeader} numberOfLines={1}>{day}</Text>
-            ))}
+            {weekDaysNames.map((day, idx) =>
+              <Text key={idx} style={this.style.dayHeader}>
+                {day}
+              </Text>
+            )}
           </View>
         }
       </View>
