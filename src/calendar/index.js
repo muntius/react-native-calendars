@@ -1,7 +1,10 @@
 import React, {Component} from 'react';
 import {
   View,
-  ViewPropTypes
+  ViewPropTypes,
+  Text,
+  FlatList,
+  TouchableOpacity
 } from 'react-native';
 import PropTypes from 'prop-types';
 
@@ -36,6 +39,12 @@ class Calendar extends Component {
     // Maximum date that can be selected, dates after maxDate will be grayed out. Default = undefined
     maxDate: PropTypes.any,
 
+    //min year to be shown in year list
+    minYear: PropTypes.number,
+
+    //max year to be shown in year list
+    maxYear: PropTypes.number,
+
     // If firstDay=1 week starts from Monday. Note that dayNames and dayNamesShort should still start from Sunday.
     firstDay: PropTypes.number,
 
@@ -49,6 +58,8 @@ class Calendar extends Component {
     // Do not show days of other months in month page. Default = false
     hideExtraDays: PropTypes.bool,
 
+    // Handler which gets executed on year selection .Default = undefined
+    onYearPress: PropTypes.func,
     // Handler which gets executed on day press. Default = undefined
     onDayPress: PropTypes.func,
     // Handler which gets executed when visible month changes in calendar. Default = undefined
@@ -77,47 +88,50 @@ class Calendar extends Component {
     if (props.current) {
       currentMonth = parseDate(props.current);
     } else {
-      currentMonth = XDate();
+      currentMonth =
+        props.selected && props.selected[0]
+          ? parseDate(props.selected[0])
+          : XDate();
     }
     this.state = {
+      showYear: false,
       currentMonth
     };
 
     this.updateMonth = this.updateMonth.bind(this);
     this.addMonth = this.addMonth.bind(this);
+    this.toggleShowYear = this.toggleShowYear.bind(this);
+    this.addYear = this.addYear.bind(this);
     this.pressDay = this.pressDay.bind(this);
     this.shouldComponentUpdate = shouldComponentUpdate;
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    return true;
+  }
+
   componentWillReceiveProps(nextProps) {
-    const current= parseDate(nextProps.current);
-    if (current && current.toString('yyyy MM') !== this.state.currentMonth.toString('yyyy MM')) {
-      this.setState({
-        currentMonth: current.clone()
-      });
-    }
-  }
+   const current = parseDate(nextProps.current);
+   if (
+     current &&
+     current.toString("yyyy MM") !==
+       this.state.currentMonth.toString("yyyy MM")
+   ) {
+     this.setState({
+       currentMonth: current.clone()
+     });
+   }
+ }
 
-  updateMonth(day, doNotTriggerListeners) {
-    if (day.toString('yyyy MM') === this.state.currentMonth.toString('yyyy MM')) {
-      return;
-    }
-    this.setState({
-      currentMonth: day.clone()
-    }, () => {
-      if (!doNotTriggerListeners) {
-        const currMont = this.state.currentMonth.clone();
-        if (this.props.onMonthChange) {
-          this.props.onMonthChange(xdateToData(currMont));
-        }
-        if (this.props.onVisibleMonthsChange) {
-          this.props.onVisibleMonthsChange([xdateToData(currMont)]);
-        }
-      }
-    });
-  }
+ updateMonth(day, doNotTriggerListeners) {
+   this.setState(
+     {
+       currentMonth: day.clone()
+     }
+   );
+ }
 
-  pressDay(date) {
+ pressDay(date) {
     const day = parseDate(date);
     const minDate = parseDate(this.props.minDate);
     const maxDate = parseDate(this.props.maxDate);
@@ -132,8 +146,18 @@ class Calendar extends Component {
     }
   }
 
-  addMonth(count) {
-    this.updateMonth(this.state.currentMonth.clone().addMonths(count, true));
+ addMonth(count) {
+   this.updateMonth(this.state.currentMonth.clone().addMonths(count, true));
+ }
+
+ addYear(count) {
+   this.updateMonth(this.state.currentMonth.clone().addYears(count, true));
+ }
+
+ toggleShowYear() {
+    var temp = this.state.showYear;
+    this.setState({ showYear: !temp });
+    this.forceUpdate();
   }
 
   renderDay(day, id) {
@@ -219,7 +243,32 @@ class Calendar extends Component {
     return (<View style={this.style.week} key={id}>{week}</View>);
   }
 
+  renderYear() {
+    const year = [];
+    for (let i = 0; i < this.props.maxYear - this.props.minYear + 1; i++) {
+      year[i] = { key: this.props.maxYear - i };
+    }
+    return (
+      <FlatList
+        style={{ marginTop: 20, marginBottom: 20 }}
+        data={year}
+        renderItem={({ item }) =>
+          <TouchableOpacity
+            onPress={() => {
+              this.addYear(item.key - this.state.currentMonth.getFullYear());
+              this.toggleShowYear();
+            }}
+          >
+            <Text style={this.style.yearText}>
+              {item.key}
+            </Text>
+          </TouchableOpacity>}
+      />
+    );
+  }
+
   render() {
+    const list = this.renderYear();
     const days = dateutils.page(this.state.currentMonth, this.props.firstDay);
     const weeks = [];
     while (days.length) {
@@ -228,11 +277,37 @@ class Calendar extends Component {
     let indicator;
     const current = parseDate(this.props.current);
     if (current) {
-      const lastMonthOfDay = current.clone().addMonths(1, true).setDate(1).addDays(-1).toString('yyyy-MM-dd');
-      if (this.props.displayLoadingIndicator &&
-          !(this.props.markedDates && this.props.markedDates[lastMonthOfDay])) {
+      const lastMonthOfDay = current
+        .clone()
+        .addMonths(1, true)
+        .setDate(1)
+        .addDays(-1)
+        .toString("yyyy-MM-dd");
+      if (
+        this.props.displayLoadingIndicator &&
+        !(this.props.markedDates && this.props.markedDates[lastMonthOfDay])
+      ) {
         indicator = true;
       }
+    }
+    if (this.state.showYear) {
+      return (
+        <View style={[this.style.container, this.props.style]}>
+          <CalendarHeader
+            theme={this.props.theme}
+            hideArrows={false}
+            month={this.state.currentMonth}
+            addMonth={this.addMonth}
+            showIndicator={indicator}
+            firstDay={this.props.firstDay}
+            renderArrow={this.props.renderArrow}
+            monthFormat={this.props.monthFormat}
+            toggleShowYear={this.toggleShowYear}
+            showYear={this.state.showYear}
+          />
+          {list}
+        </View>
+      );
     }
     return (
       <View style={[this.style.container, this.props.style]}>
@@ -245,12 +320,18 @@ class Calendar extends Component {
           firstDay={this.props.firstDay}
           renderArrow={this.props.renderArrow}
           monthFormat={this.props.monthFormat}
-          hideDayNames={this.props.hideDayNames}
-          weekNumbers={this.props.showWeekNumbers}
+          toggleShowYear={this.toggleShowYear}
+          showYear={this.state.showYear}
         />
         {weeks}
-      </View>);
+      </View>
+    );
   }
 }
+
+Calendar.defaultProps = {
+  minYear: 1930,
+  maxYear: new Date().getFullYear()
+};
 
 export default Calendar;
