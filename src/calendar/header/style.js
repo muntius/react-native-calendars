@@ -9,13 +9,15 @@ export default function(theme={}) {
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      paddingLeft: 10,
-      paddingRight: 10,
+      paddingLeft: 20,
+      paddingRight: 20,
+      paddingBottom: 10,
       alignItems: 'center'
     },
     monthText: {
       fontSize: appStyle.textMonthFontSize,
       fontFamily: appStyle.textMonthFontFamily,
+      textDecorationLine: 'underline',
       fontWeight: '300',
       color: appStyle.monthTextColor,
       margin: 10
