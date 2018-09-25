@@ -11,7 +11,7 @@ export default function(theme={}) {
       justifyContent: 'space-between',
       paddingLeft: 20,
       paddingRight: 20,
-      paddingBottom: 10,
+      paddingBottom: 20,
       alignItems: 'center'
     },
     monthText: {
