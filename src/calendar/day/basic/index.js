@@ -2,7 +2,8 @@ import React, {Component} from 'react';
 import {
   TouchableOpacity,
   Text,
-  View
+  View,
+  TouchableWithoutFeedback
 } from 'react-native';
 import PropTypes from 'prop-types';
 
@@ -60,9 +61,14 @@ class Day extends Component {
 
   render() {
     const containerStyle = [this.style.base];
+    const bg = [this.style.bg];
     const textStyle = [this.style.text];
     const dotStyle = [this.style.dot];
 
+    if (this.props.state === 'today') {
+      bg.push(this.style.todayBg);
+      containerStyle.push(this.style.todayBg)
+    }
     let marking = this.props.marking || {};
     if (marking && marking.constructor === Array && marking.length) {
       marking = {
@@ -88,6 +94,8 @@ class Day extends Component {
       textStyle.push(this.style.todayText);
     }
     return (
+      <View
+        style={bg}>
       <TouchableOpacity
         style={containerStyle}
         onPress={this.onDayPress}
@@ -100,6 +108,7 @@ class Day extends Component {
         <Text allowFontScaling={false} style={textStyle}>{String(this.props.children)}</Text>
         {dot}
       </TouchableOpacity>
+      </View>
     );
   }
 }
